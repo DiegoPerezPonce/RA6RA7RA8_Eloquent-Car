@@ -100,15 +100,26 @@ class RentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+
+
     public function destroy(string $id)
     {
+        $rent = Rent::findOrFail($id);
 
+        // 1. Marcar el coche como disponible
+        $rent->car->available = true;
+        $rent->car->save();
+
+        // 2. Eliminar el registro de alquiler
+        $rent->delete();
+
+        // 3. Redirigir según el tipo de usuario
         if (Auth::guard('admin')->check()) {
-            $rent = Rent::findOrFail($id);
-            $rent->delete();
-            return redirect()->route('admin.rent.index')->with('success', 'The rental has been deleted successfully.');
-        } else {
-            return redirect()->route('rent.index');
+            return redirect()->route('admin.rent.index')
+                ->with('success', 'The rental has been deleted successfully.');
         }
+
+        return redirect()->route('rent.index')
+            ->with('success', 'You have successfully returned the car.');
     }
 }
